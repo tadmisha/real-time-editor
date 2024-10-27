@@ -61,6 +61,17 @@ def get_path_to_notes() -> str:
     return path
 
 
+# & Get note name
+@repeat_if_incorrect
+def get_note_name() -> str:
+    note_name = input("Enter note name: ")
+    file_name = note_name+".txt"
+    if not is_filename_valid(file_name):
+        print("Invalid filename")
+        return False
+    return note_name
+
+
 # & Check if notes folder is initialized
 def is_initialized() -> bool|dict:
     try: settings = json_to_dict()
