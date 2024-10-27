@@ -28,18 +28,21 @@ def dict_to_json(data: dict, path_to_json: str = "settings.json"):
 
 # & Check if filename is valid
 def is_filename_valid(file_name: str) -> bool:
-    if not file_name.strip():
+    if file_name == "":
+        print("Filename cannot be empty")
         return False
-    allowed_chars = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-")
-    if any(char not in allowed_chars for char in file_name):
-        return False
-    if not file_name.endswith(".txt"):
+    forbidden_chars = set(r"\/:*?\"<>|")
+    if any(char in forbidden_chars for char in file_name):
+        print("Filename contains invalid characters")
         return False
     if len(file_name) > 255:
+        print("Filename is too long")
         return False
     reserved_names = set(["CON", "PRN", "AUX", "NUL"])
     if file_name.upper() in reserved_names:
+        print("Filename is in the list of reserved names")
         return False
+    
     return True
 
 
@@ -67,7 +70,6 @@ def get_note_name() -> str:
     note_name = input("Enter note name: ")
     file_name = note_name+".txt"
     if not is_filename_valid(file_name):
-        print("Invalid filename")
         return False
     return note_name
 
@@ -86,7 +88,7 @@ def main():
 
     if not is_initialized():
         path = get_path_to_notes()
-        settings = {"path": path}
+        settings = {"path": path, "notes": []}
         dict_to_json(settings)
     
     path = settings["path"]
@@ -96,9 +98,22 @@ def main():
     while True:
         command = input("Enter command: ")
 
+        # ? Command to create new note
+        if command == "!new":
+            note_name = get_note_name()
+            with open(path+"/"+note_name+".txt", "w") as _: ...
+            settings["notes"].append(note_name)
+            dict_to_json(settings)
+
         # ? Command to exit the program
-        if command == "!exit":
+        elif command == "!exit":
             break
+        
+        # ? If command doesn't exist
+        else:
+            print("Command not supported")
+   
+        print()
 
 
 if (__name__ == "__main__"):
