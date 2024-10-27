@@ -60,7 +60,16 @@ def main():
         path = get_path_to_notes()
         settings = {"path": path}
         dict_to_json(settings)
-        print("Notes folder initialized at "+path)
+    
+    path = settings["path"]
+    print("Notes folder initialized at "+path)
+
+    # ! Main loop
+    while True:
+        command = input("Enter command: ")
+
+        if command == "!exit":
+            break
 
 
 if (__name__ == "__main__"):
