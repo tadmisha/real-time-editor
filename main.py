@@ -1,4 +1,6 @@
 import os
+import json
+
 
 # & Decorator to repeat if function is incorrect
 def repeat_if_incorrect(func):    
@@ -10,6 +12,19 @@ def repeat_if_incorrect(func):
             
     return wrapper
 
+
+# & Function to convert json to dictionary
+def json_to_dict(path_to_json: str = "settings.json") -> dict:
+    with open(path_to_json) as file:
+        data = json.load(file)
+    return data
+
+
+# & Function to convert dictionary to json
+def dict_to_json(data: dict, path_to_json: str = "settings.json"):
+    with open(path_to_json, 'w') as file:
+        json.dump(data, file)
+        
 
 # & Getting path to folder to store notes
 @repeat_if_incorrect
