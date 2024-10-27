@@ -24,7 +24,7 @@ def json_to_dict(path_to_json: str = "settings.json") -> dict:
 def dict_to_json(data: dict, path_to_json: str = "settings.json"):
     with open(path_to_json, 'w') as file:
         json.dump(data, file)
-        
+
 
 # & Getting path to folder to store notes
 @repeat_if_incorrect
@@ -42,11 +42,25 @@ def get_path_to_notes() -> str:
         return False
     
     return path
-    
+
+
+# & Check if notes folder is initialized
+def is_initialized() -> bool|dict:
+    try: settings = json_to_dict()
+    except FileNotFoundError: return False
+    return settings
+
 
 # & Main function
 def main():
-    ...
+    # ! Initializing notes folder if not already initialize
+    settings = is_initialized()
+
+    if not is_initialized():
+        path = get_path_to_notes()
+        settings = {"path": path}
+        dict_to_json(settings)
+        print("Notes folder initialized at "+path)
 
 
 if (__name__ == "__main__"):
