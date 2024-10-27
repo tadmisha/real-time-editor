@@ -26,6 +26,23 @@ def dict_to_json(data: dict, path_to_json: str = "settings.json"):
         json.dump(data, file)
 
 
+# & Check if filename is valid
+def is_filename_valid(file_name: str) -> bool:
+    if not file_name.strip():
+        return False
+    allowed_chars = set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-")
+    if any(char not in allowed_chars for char in file_name):
+        return False
+    if not file_name.endswith(".txt"):
+        return False
+    if len(file_name) > 255:
+        return False
+    reserved_names = set(["CON", "PRN", "AUX", "NUL"])
+    if file_name.upper() in reserved_names:
+        return False
+    return True
+
+
 # & Getting path to folder to store notes
 @repeat_if_incorrect
 def get_path_to_notes() -> str:
@@ -68,6 +85,7 @@ def main():
     while True:
         command = input("Enter command: ")
 
+        # ? Command to exit the program
         if command == "!exit":
             break
 
