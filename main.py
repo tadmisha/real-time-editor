@@ -3,11 +3,11 @@ import json
 
 
 # & Decorator to repeat if function is incorrect
-def repeat_if_incorrect(func):    
-    def wrapper():
-        function_return = func()
+def repeat_if_incorrect(func, *args, **kwargs):    
+    def wrapper(*fargs, **fkwargs):
+        function_return = func(*fargs, **fkwargs)
         while (not function_return):
-            function_return = func()
+            function_return = func(*fargs, **fkwargs)
         return function_return
             
     return wrapper
@@ -66,10 +66,23 @@ def get_path_to_notes() -> str:
 
 # & Get note name
 @repeat_if_incorrect
-def get_note_name() -> str:
+def get_note_name(settings: dict) -> str:
     note_name = input("Enter note name: ")
     file_name = note_name+".txt"
+    if note_name in settings["notes"]:
+        print("Note already exists")
+        return False
     if not is_filename_valid(file_name):
+        return False
+    return note_name
+
+
+# & Get note name for functions
+@repeat_if_incorrect
+def get_note_name_for_functions(settings: dict) -> str:
+    note_name = input("Enter note name: ")
+    if note_name not in settings["notes"]:
+        print("Note doesn't exist")
         return False
     return note_name
 
@@ -92,7 +105,7 @@ def main():
         dict_to_json(settings)
     
     path = settings["path"]
-    print("Notes folder initialized at "+path)
+    print("Notes folder initialized at "+path+"\n")
 
     # ! Main loop
     while True:
@@ -100,9 +113,29 @@ def main():
 
         # ? Command to create new note
         if command == "!new":
-            note_name = get_note_name()
+            note_name = get_note_name(settings)
             with open(path+"/"+note_name+".txt", "w") as _: ...
             settings["notes"].append(note_name)
+            dict_to_json(settings)
+
+        # ? Command to read note
+        elif command == "!read":
+            note_name = get_note_name_for_functions(settings)
+            with open(path+"/"+note_name+".txt", "r") as file:
+                print(file.read())
+
+        # ? Command to write note
+        elif command == "!write":
+            note_name = get_note_name_for_functions(settings)
+            text = input("Enter text: ")
+            with open(path+"/"+note_name+".txt", "w") as file:
+                file.write(text)
+        
+        # ? Command to delete note
+        elif command == "!delete":
+            note_name = get_note_name_for_functions(settings)
+            settings["notes"].remove(note_name)
+            os.remove(path+"/"+note_name+".txt")
             dict_to_json(settings)
 
         # ? Command to exit the program
