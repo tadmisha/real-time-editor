@@ -42,9 +42,9 @@ def is_filename_valid(file_name: str) -> bool:
         print("Filename cannot be empty")
         return False
     forbidden_chars = set(r"\/:*?\"<>|")
-    if (any(char in forbidden_chars for char in file_name)):
-        print("Filename contains invalid characters")
-        return False
+    for char in forbidden_chars:
+        if char in file_name:
+            print(f"Contains forbidden character \"{char}\"")
     if (len(file_name) > 255):
         print("Filename is too long")
         return False
@@ -64,11 +64,6 @@ def get_path_to_notes() -> str:
     # ! Check if exists
     if (not os.path.exists(path)):
         print("Path doesn't exist")
-        return False
-    
-    # ! Check if folder is empty
-    if (len(os.listdir(path)) != 0):
-        print("Folder must be empty")
         return False
     
     return path
@@ -98,18 +93,20 @@ def get_note_name_for_functions(settings: dict) -> str:
 
 
 # & Check if notes folder is initialized
-def is_initialized() -> bool|dict:
+def get_settings_if_initialized() -> bool|dict:
     empty = False
     try: settings = json_to_dict()
     except FileNotFoundError: return False
     except json.decoder.JSONDecodeError: empty = True
+    print(type(settings["notes"]))
     if ((empty) or \
-        (not "path" in settings) or \
-        (not "notes" in settings) or \
-        (type(settings["path"]) != str) or \
-        (type(settings["notes"] != list))) or \
-        (not any([type(note) == str for note in settings["notes"]])):
-        print("Something went wrong, write path to your notes folder")
+    (not "path" in settings) or \
+    (not "notes" in settings) or \
+    (type(settings["path"]) != str) or \
+    (type(settings["notes"]) != list) or \
+    (not any([type(note) == str for note in settings["notes"]]))):
+        print("Invalid settings format, write path to your notes folder")
+        quit()
         os.remove("settings.json")
         return False
     return settings
@@ -119,11 +116,16 @@ def is_initialized() -> bool|dict:
 def main():
     # ! Initializing notes folder if not already initialize
     # * Contains data from settings.json (folder path and notes names)
-    settings = is_initialized()
+    settings = get_settings_if_initialized()
 
-    if (not settings):
+    if (not settings): # If not initialized
         path = get_path_to_notes()
         settings = {"path": path, "notes": []}
+        # ^ Adding all the notes (txt files) that are already in the path folder
+        files = os.listdir(path)
+        for file in files:
+            if file.endswith(".txt"):
+                settings["notes"].append(file[:-4])
         dict_to_json(settings)
     
     path = settings["path"]
