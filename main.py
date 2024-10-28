@@ -28,7 +28,7 @@ def dict_to_json(data: dict, path_to_json: str = "settings.json"):
 
 # & Check if filename is valid
 def is_filename_valid(file_name: str) -> bool:
-    if file_name == "":
+    if not file_name:
         print("Filename cannot be empty")
         return False
     forbidden_chars = set(r"\/:*?\"<>|")
@@ -137,6 +137,16 @@ def main():
             settings["notes"].remove(note_name)
             os.remove(path+"/"+note_name+".txt")
             dict_to_json(settings)
+        
+        # ? Command to search for note by keyword
+        elif command == "!search":
+            keyword = input("Enter keyword: ")
+            notes_with_keyword = []
+            for note in settings["notes"]:
+                with open(path+"/"+note+".txt", "r", encoding="utf-8") as file:
+                    if keyword in file.read():
+                        notes_with_keyword.append(note)
+            print("This keyword is found in the following notes: "+", ".join(notes_with_keyword))
 
         # ? Command to exit the program
         elif command == "!exit":
