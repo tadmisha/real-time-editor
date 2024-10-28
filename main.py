@@ -2,6 +2,16 @@ import os
 import json
 
 
+# * Text for the help function
+help_text = """!help - provides information about all the other commands
+!new - creates new note
+!write - writes in a chosen note
+!read - reads a chosen note
+!delete - deletes a chosen note
+!search - search notes by keywords
+!exit - exits the editor"""
+
+
 # & Decorator to repeat if function is incorrect
 def repeat_if_incorrect(func, *args, **kwargs):    
     def wrapper(*fargs, **fkwargs):
@@ -28,18 +38,18 @@ def dict_to_json(data: dict, path_to_json: str = "settings.json"):
 
 # & Check if filename is valid
 def is_filename_valid(file_name: str) -> bool:
-    if not file_name:
+    if (not file_name):
         print("Filename cannot be empty")
         return False
     forbidden_chars = set(r"\/:*?\"<>|")
-    if any(char in forbidden_chars for char in file_name):
+    if (any(char in forbidden_chars for char in file_name)):
         print("Filename contains invalid characters")
         return False
-    if len(file_name) > 255:
+    if (len(file_name) > 255):
         print("Filename is too long")
         return False
     reserved_names = set(["CON", "PRN", "AUX", "NUL"])
-    if file_name.upper() in reserved_names:
+    if (file_name.upper() in reserved_names):
         print("Filename is in the list of reserved names")
         return False
     
@@ -52,12 +62,12 @@ def get_path_to_notes() -> str:
     path = input("Enter path to notes: ")
     
     # ! Check if exists
-    if not os.path.exists(path):
+    if (not os.path.exists(path)):
         print("Path doesn't exist")
         return False
     
     # ! Check if folder is empty
-    if len(os.listdir(path)) != 0:
+    if (len(os.listdir(path)) != 0):
         print("Folder must be empty")
         return False
     
@@ -69,10 +79,10 @@ def get_path_to_notes() -> str:
 def get_note_name(settings: dict) -> str:
     note_name = input("Enter note name: ").replace(' ', '')
     file_name = note_name+".txt"
-    if note_name in settings["notes"]:
+    if (note_name in settings["notes"]):
         print("Note with this name already exists")
         return False
-    if not is_filename_valid(file_name):
+    if (not is_filename_valid(file_name)):
         return False
     return note_name
 
@@ -81,7 +91,7 @@ def get_note_name(settings: dict) -> str:
 @repeat_if_incorrect
 def get_note_name_for_functions(settings: dict) -> str:
     note_name = input("Enter note name: ").replace(' ', '')
-    if note_name not in settings["notes"]:
+    if (note_name not in settings["notes"]):
         print("Note doesn't exist")
         return False
     return note_name
@@ -89,17 +99,29 @@ def get_note_name_for_functions(settings: dict) -> str:
 
 # & Check if notes folder is initialized
 def is_initialized() -> bool|dict:
+    empty = False
     try: settings = json_to_dict()
     except FileNotFoundError: return False
+    except json.decoder.JSONDecodeError: empty = True
+    if ((empty) or \
+        (not "path" in settings) or \
+        (not "notes" in settings) or \
+        (type(settings["path"]) != str) or \
+        (type(settings["notes"] != list))) or \
+        (not any([type(note) == str for note in settings["notes"]])):
+        print("Something went wrong, write path to your notes folder")
+        os.remove("settings.json")
+        return False
     return settings
 
 
 # & Main function
 def main():
     # ! Initializing notes folder if not already initialize
+    # * Contains data from settings.json (folder path and notes names)
     settings = is_initialized()
 
-    if not is_initialized():
+    if (not settings):
         path = get_path_to_notes()
         settings = {"path": path, "notes": []}
         dict_to_json(settings)
@@ -111,35 +133,39 @@ def main():
     while True:
         command = input("Enter command: ").replace(' ', '')
 
+        # ? Command that provides information about all the other commands
+        if (command == "!help"):
+            print(help_text)
+
         # ? Command to create new note
-        if command == "!new":
+        elif (command == "!new"):
             note_name = get_note_name(settings)
             with open(path+"/"+note_name+".txt", "w") as _: ...
             settings["notes"].append(note_name)
             dict_to_json(settings)
 
         # ? Command to read note
-        elif command == "!read":
+        elif (command == "!read"):
             note_name = get_note_name_for_functions(settings)
             with open(path+"/"+note_name+".txt", "r") as file:
                 print(file.read())
 
         # ? Command to write note
-        elif command == "!write":
+        elif (command == "!write"):
             note_name = get_note_name_for_functions(settings)
             text = input("Enter text: ")
             with open(path+"/"+note_name+".txt", "w") as file:
                 file.write(text)
         
         # ? Command to delete note
-        elif command == "!delete":
+        elif (command == "!delete"):
             note_name = get_note_name_for_functions(settings)
             settings["notes"].remove(note_name)
             os.remove(path+"/"+note_name+".txt")
             dict_to_json(settings)
         
         # ? Command to search for note by keyword
-        elif command == "!search":
+        elif (command == "!search"):
             keyword = input("Enter keyword: ")
             notes_with_keyword = []
             for note in settings["notes"]:
@@ -149,10 +175,10 @@ def main():
             print("This keyword is found in the following notes: "+", ".join(notes_with_keyword))
 
         # ? Command to exit the program
-        elif command == "!exit":
+        elif (command == "!exit"):
             break
         
-        # ? If command doesn't exist
+        # ? Command doesn't exist
         else:
             print("Command not supported")
    
