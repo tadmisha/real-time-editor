@@ -67,10 +67,10 @@ def get_path_to_notes() -> str:
 # & Get note name
 @repeat_if_incorrect
 def get_note_name(settings: dict) -> str:
-    note_name = input("Enter note name: ")
+    note_name = input("Enter note name: ").replace(' ', '')
     file_name = note_name+".txt"
     if note_name in settings["notes"]:
-        print("Note already exists")
+        print("Note with this name already exists")
         return False
     if not is_filename_valid(file_name):
         return False
@@ -80,7 +80,7 @@ def get_note_name(settings: dict) -> str:
 # & Get note name for functions
 @repeat_if_incorrect
 def get_note_name_for_functions(settings: dict) -> str:
-    note_name = input("Enter note name: ")
+    note_name = input("Enter note name: ").replace(' ', '')
     if note_name not in settings["notes"]:
         print("Note doesn't exist")
         return False
@@ -109,7 +109,7 @@ def main():
 
     # ! Main loop
     while True:
-        command = input("Enter command: ")
+        command = input("Enter command: ").replace(' ', '')
 
         # ? Command to create new note
         if command == "!new":
