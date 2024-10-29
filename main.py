@@ -165,6 +165,10 @@ def main():
             settings["notes"].remove(note_name)
             os.remove(path+"/"+note_name+".txt")
             dict_to_json(settings)
+
+        # ? Command to list all the notes
+        elif (command == "!list"):
+            print(", ".join(settings["notes"]))
         
         # ? Command to search for note by keyword
         elif (command == "!search"):
