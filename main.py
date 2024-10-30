@@ -4,12 +4,16 @@ import json
 
 # * Text for the help function
 help_text = """!help - provides information about all the other commands
+
 !new - creates new note
 !write - writes in a chosen note
 !read - reads a chosen note
 !delete - deletes a chosen note
 !search - search notes by keywords
 !exit - exits the editor"""
+
+# * Note name input standart text
+note_name_input_standart_text = "Enter note name: "
 
 
 # & Decorator to repeat if function is incorrect
@@ -71,8 +75,8 @@ def get_path_to_notes() -> str:
 
 # & Get note name
 @repeat_if_incorrect
-def get_note_name(settings: dict) -> str:
-    note_name = input("Enter note name: ").replace(' ', '')
+def get_note_name_if_not_exist(settings: dict, input_text: str = note_name_input_standart_text) -> str:
+    note_name = input(input_text).rstrip()
     file_name = note_name+".txt"
     if (note_name in settings["notes"]):
         print("Note with this name already exists")
@@ -84,8 +88,9 @@ def get_note_name(settings: dict) -> str:
 
 # & Get note name for functions
 @repeat_if_incorrect
-def get_note_name_for_functions(settings: dict) -> str:
-    note_name = input("Enter note name: ").replace(' ', '')
+def get_note_name_if_exists(settings: dict, input_text: str = note_name_input_standart_text) -> str:
+    note_name = input(input_text).rstrip()
+    
     if (note_name not in settings["notes"]):
         print("Note doesn't exist")
         return False
@@ -98,7 +103,6 @@ def get_settings_if_initialized() -> bool|dict:
     try: settings = json_to_dict()
     except FileNotFoundError: return False
     except json.decoder.JSONDecodeError: empty = True
-    print(type(settings["notes"]))
     if ((empty) or \
     (not "path" in settings) or \
     (not "notes" in settings) or \
@@ -106,7 +110,6 @@ def get_settings_if_initialized() -> bool|dict:
     (type(settings["notes"]) != list) or \
     (not any([type(note) == str for note in settings["notes"]]))):
         print("Invalid settings format, write path to your notes folder")
-        quit()
         os.remove("settings.json")
         return False
     return settings
@@ -133,7 +136,7 @@ def main():
 
     # ! Main loop
     while True:
-        command = input("Enter command: ").replace(' ', '')
+        command = input("Enter command: ").rstrip()
 
         # ? Command that provides information about all the other commands
         if (command == "!help"):
@@ -141,29 +144,38 @@ def main():
 
         # ? Command to create new note
         elif (command == "!new"):
-            note_name = get_note_name(settings)
+            note_name = get_note_name_if_not_exist(settings)
             with open(path+"/"+note_name+".txt", "w") as _: ...
             settings["notes"].append(note_name)
             dict_to_json(settings)
 
         # ? Command to read note
         elif (command == "!read"):
-            note_name = get_note_name_for_functions(settings)
+            note_name = get_note_name_if_exists(settings)
             with open(path+"/"+note_name+".txt", "r") as file:
                 print(file.read())
 
         # ? Command to write note
         elif (command == "!write"):
-            note_name = get_note_name_for_functions(settings)
+            note_name = get_note_name_if_exists(settings)
             text = input("Enter text: ")
             with open(path+"/"+note_name+".txt", "w") as file:
                 file.write(text)
         
         # ? Command to delete note
         elif (command == "!delete"):
-            note_name = get_note_name_for_functions(settings)
+            note_name = get_note_name_if_exists(settings)
             settings["notes"].remove(note_name)
             os.remove(path+"/"+note_name+".txt")
+            dict_to_json(settings)
+
+        # ? Command to rename an existing note
+        elif (command == "!rename"):
+            note_name = get_note_name_if_exists(settings)
+            new_note_name = get_note_name_if_not_exist(settings, input_text="Enter note's new name: ", )
+            os.rename(path+"/"+note_name+".txt", path+"/"+new_note_name+".txt")
+            settings["notes"].remove(note_name)
+            settings["notes"].append(new_note_name)
             dict_to_json(settings)
 
         # ? Command to list all the notes
@@ -172,11 +184,11 @@ def main():
         
         # ? Command to search for note by keyword
         elif (command == "!search"):
-            keyword = input("Enter keyword: ")
+            keyword = input("Enter keyword: ").lower()
             notes_with_keyword = []
             for note in settings["notes"]:
                 with open(path+"/"+note+".txt", "r", encoding="utf-8") as file:
-                    if keyword in file.read():
+                    if keyword in file.read().lower():
                         notes_with_keyword.append(note)
             print("This keyword is found in the following notes: "+", ".join(notes_with_keyword))
 
